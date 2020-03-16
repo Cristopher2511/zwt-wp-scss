@@ -77,8 +77,27 @@ class Wp_Scss {
               ));
 			  
 			        $css = $scssc->compile(file_get_contents($in), $in);
-
-              file_put_contents($cache.basename($out), $css);
+              $outnew = str_replace($instance->css_dir,"",$out);
+              $outnew1 = explode("/",$outnew);
+              
+              if (sizeof($outnew1) > 1) {
+                foreach($outnew1 as $outnewfile)
+                {
+                  $file_parts = pathinfo($outnewfile);
+                  if(isset($file_parts['extension']))
+                  {
+                    $ourfilename = $outnewfile;
+                  }else{
+                    $ourdirpath = $cache.$outnewfile;
+                    if (! is_dir($ourdirpath)) {
+                      mkdir( $ourdirpath, 0755 );
+                    }
+                  }
+                }
+                file_put_contents($ourdirpath."/".$ourfilename, $css);
+              }else{
+                file_put_contents($cache.basename($out), $css);
+              }
           } catch (Exception $e) {
               $errors = array (
                 'file' => basename($in),
@@ -120,12 +139,14 @@ class Wp_Scss {
       //}
       if (count($this->compile_errors) < 1) {
         if  ( is_writable($this->css_dir) ) {
+          //$readcache = new DirectoryIterator($cache);
           foreach (new DirectoryIterator($cache) as $cache_file) {
+            print_r($cache_file);
             if ( pathinfo($cache_file->getFilename(), PATHINFO_EXTENSION) == 'css') {
               /* echo $this->css_dir.$cache_file."<br>";
               echo $cache.$cache_file."<br>"; */
-              file_put_contents($this->css_dir.$cache_file, file_get_contents($cache.$cache_file));
-              unlink($cache.$cache_file->getFilename()); // Delete file on successful write
+              //file_put_contents($this->css_dir.$cache_file, file_get_contents($cache.$cache_file));
+              //unlink($cache.$cache_file->getFilename()); // Delete file on successful write
             }
           }
         } else {
