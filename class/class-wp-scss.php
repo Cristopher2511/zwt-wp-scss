@@ -140,13 +140,28 @@ class Wp_Scss {
       if (count($this->compile_errors) < 1) {
         if  ( is_writable($this->css_dir) ) {
           //$readcache = new DirectoryIterator($cache);
+          
           foreach (new DirectoryIterator($cache) as $cache_file) {
-            print_r($cache_file);
-            if ( pathinfo($cache_file->getFilename(), PATHINFO_EXTENSION) == 'css') {
-              /* echo $this->css_dir.$cache_file."<br>";
-              echo $cache.$cache_file."<br>"; */
-              //file_put_contents($this->css_dir.$cache_file, file_get_contents($cache.$cache_file));
-              //unlink($cache.$cache_file->getFilename()); // Delete file on successful write
+            if(trim($cache_file->getFilename())!='.' && trim($cache_file->getFilename())!='..'){
+              if ( pathinfo($cache_file->getFilename(), PATHINFO_EXTENSION) == 'css') {
+                file_put_contents($this->css_dir.$cache_file, file_get_contents($cache.$cache_file));
+                unlink($cache.$cache_file->getFilename()); // Delete file on successful write
+              }else{
+                $incache = $cache.$cache_file->getFilename()."/";
+                $incss = $this->css_dir.$cache_file->getFilename()."/";
+                if (!is_dir($incss)) {
+                  mkdir( $incss, 0755 );
+                }                
+                foreach (new DirectoryIterator($incache) as $cache_files) {
+                  if ( pathinfo($cache_files->getFilename(), PATHINFO_EXTENSION) == 'css') {
+                    file_put_contents($incss.$cache_files, file_get_contents($incache.$cache_files));
+                    unlink($incache.$cache_files->getFilename()); // Delete file on successful write
+                  }
+                }
+                if (is_dir($incache)) {
+                  rmdir($incache);
+                }
+              }
             }
           }
         } else {
